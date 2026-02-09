@@ -2,7 +2,7 @@
 
 namespace TaskMangementAPI.Models;
 
-internal class TMDbContext : DbContext
+public class TMDbContext : DbContext
 {
     public TMDbContext(DbContextOptions<TMDbContext> options) : base(options)
     {

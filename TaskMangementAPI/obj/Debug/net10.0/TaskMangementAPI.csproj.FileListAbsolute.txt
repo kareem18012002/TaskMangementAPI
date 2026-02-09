@@ -160,3 +160,4 @@ D:\backendProject\c#\TaskMangementAPI\TaskMangementAPI\obj\Debug\net10.0\refint\
 D:\backendProject\c#\TaskMangementAPI\TaskMangementAPI\obj\Debug\net10.0\TaskMangementAPI.pdb
 D:\backendProject\c#\TaskMangementAPI\TaskMangementAPI\obj\Debug\net10.0\TaskMangementAPI.genruntimeconfig.cache
 D:\backendProject\c#\TaskMangementAPI\TaskMangementAPI\obj\Debug\net10.0\ref\TaskMangementAPI.dll
+D:\backendProject\c#\TaskMangementAPI\TaskMangementAPI\obj\Debug\net10.0\TaskMangementAPI.sourcelink.json
