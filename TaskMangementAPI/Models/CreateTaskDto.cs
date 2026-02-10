@@ -2,18 +2,13 @@
 
 namespace TaskMangementAPI.Models
 {
-    public class TaskItem
+    public class CreateTaskDto
     {
-        public int Id { get; set; }
+       
         [Required(ErrorMessage = "Title is required.")]
         public string Title { get; set; }
         [MaxLength(500)]
         public string Description { get; set; }
-        public DateTime CreatedDate { get; set; }= DateTime.Now;
-        [Required]
-        public string Status { get; set; }
-        public bool IsDeleted { get; set; }
-
-
+  
     }
 }

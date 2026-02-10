@@ -18,13 +18,32 @@ namespace TaskMangementAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var tasks = await _tMDbContext.taskItems.ToListAsync();
+           if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var tasks = await _tMDbContext.taskItems
+      .Where(t => !t.IsDeleted)
+      .Select(t => new TaskDto
+      {
+          Id = t.Id,
+          Title = t.Title,
+          Description = t.Description,
+          Status = t.Status
+      })
+      .ToListAsync();
             return Ok(tasks);
         }
         [HttpGet("id")]
         public async Task<IActionResult> GetById(int id)
         {
-            var task = await _tMDbContext.taskItems.FindAsync(id);
+            var task = await _tMDbContext.taskItems.Where(t=> t.Id == id && !t.IsDeleted).Select(t=> new TaskDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                Status = t.Status
+            }).FirstOrDefaultAsync();
             if (task == null)
             {
                 return NotFound();
@@ -33,45 +52,54 @@ namespace TaskMangementAPI.Controllers
 
         }
         [HttpPost]
-        public async Task<IActionResult> CreateTask(TaskItem taskItem)
+        public async Task<IActionResult> CreateTask(CreateTaskDto dto)
         {
-            _tMDbContext.taskItems.Add(taskItem);
-            await _tMDbContext.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = taskItem.Id }, taskItem);
-        }
-        [HttpPut("id")]
-        public async Task<IActionResult> UpdateTask(int id, TaskItem taskItem)
-        {
-            if (id != taskItem.Id)
+            var task = new TaskItem
             {
-                return BadRequest();
-            }
-            _tMDbContext.Entry(taskItem).State = EntityState.Modified;
-            try
-            {
-                await _tMDbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (id != taskItem.Id)
-                {
-                    return BadRequest();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return NoContent();
+                Title = dto.Title,
+                Description = dto.Description,
+                CreatedDate = DateTime.UtcNow,
+                IsDeleted = false,
+                Status = "Pending"
+            };
 
+            _tMDbContext.taskItems.Add(task);
+            await _tMDbContext.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTask(int id, UpdateTaskDto dto)
+        {
+            if (id != dto.Id)
+                return BadRequest();
+
+            var task = await _tMDbContext.taskItems.FindAsync(id);
+
+            if (task == null || task.IsDeleted)
+                return NotFound();
+
+            task.Title = dto.Title;
+            task.Description = dto.Description;
+            task.Status = dto.Status;
+
+            await _tMDbContext.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+
+
+        
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var task = await _tMDbContext.taskItems.FindAsync(id);
             if (task == null) return NotFound();
+            task.IsDeleted = true;
 
-            _tMDbContext.taskItems.Remove(task);
+            //_tMDbContext.taskItems.Remove(task);
             await _tMDbContext.SaveChangesAsync();
             return NoContent();
         }
