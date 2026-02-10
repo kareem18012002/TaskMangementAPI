@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskMangementAPI.Models;
+using TaskMangementAPI.Repositories;
 
 namespace TaskMangementAPI.Controllers
 {
@@ -9,48 +10,32 @@ namespace TaskMangementAPI.Controllers
     [ApiController]
     public class TaskItemController : ControllerBase
     {
-        private readonly TMDbContext _tMDbContext;
+        private readonly ITaskRepository _taskRepository;
 
-        public TaskItemController(TMDbContext tMDbContext)
+        public TaskItemController(ITaskRepository taskRepository)
         {
-            _tMDbContext = tMDbContext;
+            _taskRepository = taskRepository;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet]
+        public async Task<IActionResult> GetAllTasks()
         {
-           if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var tasks = await _tMDbContext.taskItems
-      .Where(t => !t.IsDeleted)
-      .Select(t => new TaskDto
-      {
-          Id = t.Id,
-          Title = t.Title,
-          Description = t.Description,
-          Status = t.Status
-      })
-      .ToListAsync();
+            var tasks = await _taskRepository.GetAllAsync();
             return Ok(tasks);
         }
-        [HttpGet("id")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var task = await _tMDbContext.taskItems.Where(t=> t.Id == id && !t.IsDeleted).Select(t=> new TaskDto
-            {
-                Id = t.Id,
-                Title = t.Title,
-                Description = t.Description,
-                Status = t.Status
-            }).FirstOrDefaultAsync();
-            if (task == null)
-            {
-                return NotFound();
-            }
-            return Ok(task);
 
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetTaskById(int id)
+        {
+            var task = await _taskRepository.GetByIdAsync(id);
+
+            if (task == null)
+                return NotFound();
+
+            return Ok(task);
         }
+
         [HttpPost]
         public async Task<IActionResult> CreateTask(CreateTaskDto dto)
         {
@@ -60,48 +45,55 @@ namespace TaskMangementAPI.Controllers
                 Description = dto.Description,
                 CreatedDate = DateTime.UtcNow,
                 IsDeleted = false,
-                Status = "Pending"
+                Status = dto.Status
             };
 
-            _tMDbContext.taskItems.Add(task);
-            await _tMDbContext.SaveChangesAsync();
+            await _taskRepository.AddAsync(task);
+            await _taskRepository.SaveAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
+            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
         }
 
         [HttpPut("{id}")]
+   
         public async Task<IActionResult> UpdateTask(int id, UpdateTaskDto dto)
         {
-            if (id != dto.Id)
-                return BadRequest();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var task = await _tMDbContext.taskItems.FindAsync(id);
+            var existing = await _taskRepository.GetByIdAsync(id);
 
-            if (task == null || task.IsDeleted)
+            if (existing == null)
                 return NotFound();
 
-            task.Title = dto.Title;
-            task.Description = dto.Description;
-            task.Status = dto.Status;
+            existing.Title = dto.Title;
+            existing.Description = dto.Description;
+            existing.Status = dto.Status;
 
-            await _tMDbContext.SaveChangesAsync();
+            await _taskRepository.UpdateAsync(existing);
+            await _taskRepository.SaveAsync();
 
             return NoContent();
         }
 
 
 
-        
+
+
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        
+        public async Task<IActionResult> DeleteTask(int id)
         {
-            var task = await _tMDbContext.taskItems.FindAsync(id);
-            if (task == null) return NotFound();
-            task.IsDeleted = true;
+            var task = await _taskRepository.GetByIdAsync(id);
 
-            //_tMDbContext.taskItems.Remove(task);
-            await _tMDbContext.SaveChangesAsync();
+            if (task == null)
+                return NotFound();
+
+            await _taskRepository.SoftDeleteAsync(task);
+            await _taskRepository.SaveAsync();
+
             return NoContent();
         }
+
     }
-    }
+}

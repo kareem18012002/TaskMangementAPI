@@ -8,5 +8,5 @@ public class TMDbContext : DbContext
     {
       
     }
-    public DbSet<TaskItem> taskItems  { get; set; }
+    public DbSet<TaskItem> TaskItems  { get; set; }
 }

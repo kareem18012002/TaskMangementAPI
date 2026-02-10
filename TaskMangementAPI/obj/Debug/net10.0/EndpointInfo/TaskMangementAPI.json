@@ -24,17 +24,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TaskItem"
+                "$ref": "#/components/schemas/CreateTaskDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/TaskItem"
+                "$ref": "#/components/schemas/CreateTaskDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/TaskItem"
+                "$ref": "#/components/schemas/CreateTaskDto"
               }
             }
           }
@@ -46,7 +46,7 @@
         }
       }
     },
-    "/api/TaskItem/id": {
+    "/api/TaskItem/{id}": {
       "get": {
         "tags": [
           "TaskItem"
@@ -54,7 +54,8 @@
         "parameters": [
           {
             "name": "id",
-            "in": "query",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -74,7 +75,8 @@
         "parameters": [
           {
             "name": "id",
-            "in": "query",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -85,17 +87,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TaskItem"
+                "$ref": "#/components/schemas/UpdateTaskDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/TaskItem"
+                "$ref": "#/components/schemas/UpdateTaskDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/TaskItem"
+                "$ref": "#/components/schemas/UpdateTaskDto"
               }
             }
           }
@@ -105,9 +107,7 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/TaskItem/{id}": {
+      },
       "delete": {
         "tags": [
           "TaskItem"
@@ -133,7 +133,29 @@
   },
   "components": {
     "schemas": {
-      "TaskItem": {
+      "CreateTaskDto": {
+        "required": [
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTaskDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -148,15 +170,7 @@
             "type": "string",
             "nullable": true
           },
-          "createdDate": {
-            "type": "string",
-            "format": "date-time"
-          },
           "status": {
-            "type": "string",
-            "nullable": true
-          },
-          "isdBy": {
             "type": "string",
             "nullable": true
           }
